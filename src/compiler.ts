@@ -46,6 +46,7 @@ export async function legacyDub(): Promise<DubDescription> {
 
 async function dmd(version: string): Promise<CompilerDescription> {
     let beta = false;
+    let nightly = false;
 
     switch (version) {
         case "latest":
@@ -54,6 +55,10 @@ async function dmd(version: string): Promise<CompilerDescription> {
         case "beta":
             version = await body_as_text("http://downloads.dlang.org/pre-releases/LATEST");
             beta = true;
+            break;
+        case "nightly":
+            version = "master";
+            nightly = true;
             break;
     }
 
@@ -74,7 +79,10 @@ async function dmd(version: string): Promise<CompilerDescription> {
     }
 
     const base_url = version == "master" ?
-        `http://downloads.dlang.org/nightlies/dmd-master/dmd.${version}`
+        (nightly
+            ? `https://github.com/dlang/dmd/releases/download/nightly/dmd.${version}`
+            : `http://downloads.dlang.org/nightlies/dmd-master/dmd.${version}`
+        )
         : beta ? `http://downloads.dlang.org/pre-releases/2.x/${folder}/dmd.${version}`
             : `http://downloads.dlang.org/releases/2.x/${folder}/dmd.${version}`;
 
@@ -90,8 +98,9 @@ async function dmd(version: string): Promise<CompilerDescription> {
             binpath: "\\dmd2\\windows\\bin",
             libpath: "\\dmd2\\windows\\lib64",
             download_dub: download_dub,
-            sig: `${base_url}.windows.7z.sig`
+            sig: nightly ? undefined : `${base_url}.windows.7z.sig`
         };
+
         case "linux": return {
             name: "dmd",
             version: version,
@@ -101,7 +110,7 @@ async function dmd(version: string): Promise<CompilerDescription> {
             binpath: "/dmd2/linux/bin64",
             libpath: "/dmd2/linux/lib64",
             download_dub: download_dub,
-            sig: `${base_url}.linux.tar.xz.sig`
+            sig: nightly ? undefined : `${base_url}.linux.tar.xz.sig`
         };
         case "darwin": return {
             name: "dmd",
@@ -112,7 +121,7 @@ async function dmd(version: string): Promise<CompilerDescription> {
             binpath: "/dmd2/osx/bin",
             libpath: "/dmd2/linux/lib64",
             download_dub: download_dub,
-            sig: `${base_url}.osx.tar.xz.sig`
+            sig: nightly ? undefined : `${base_url}.osx.tar.xz.sig`
         };
         default:
             throw new Error("unsupported platform: " + process.platform);

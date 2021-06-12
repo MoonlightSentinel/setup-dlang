@@ -25,6 +25,7 @@ jobs:
             dmd-latest,
             dmd-beta,
             dmd-master,
+            dmd-nightly,
             "",
           ]
     runs-on: ${{ matrix.os }}
